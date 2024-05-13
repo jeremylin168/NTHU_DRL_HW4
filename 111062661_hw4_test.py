@@ -25,7 +25,7 @@ import numpy as np
 import random
 
 class Agent_train():
-    def __init__(self):
+    def __init__(self, n=True):
 
         self.device = torch.device("cpu")
 
@@ -76,7 +76,7 @@ class Agent_train():
         # memory
         #self.memory_counter = 0
         #self.memory_limit = 64 * 64 * 8
-        #self.state_size = 339
+        self.state_size = 339
 
         #self.memory = np.zeros((self.memory_limit, self.state_size * 2 * 2 + self.action_num + 2)) # two state frame & 22 action & 1 reward & 1 done
         
@@ -85,8 +85,8 @@ class Agent_train():
         self.train_state_buffer = np.zeros((2, 339))
         self.next_state_buffer = np.zeros((2, 339))
 
-
-        self.load_weight()
+        if n:
+            self.load_weight(path=f"111062892_hw4_data")
 
     def show_sample(self):
         #n_state = self.process_obs(observation)
@@ -316,7 +316,7 @@ class Agent_train():
         self.critic_1.save_weight(path=f"{path}_ep{ep}_c1")
         self.critic_2.save_weight(path=f"{path}_ep{ep}_c2")
     """
-    def load_weight(self, path="./models_3/test_model_weight", ep="none"):
+    def load_weight(self, path="./models_3/test_model_weight"):
         #with open(f"{path}_ep{ep}_alpha.txt", "r") as f:
             #self.alpha = torch.autograd.Variable(torch.tensor(float(f.read()), dtype=torch.float32), requires_grad=True).to(self.device)
             #self.alpha = torch.autograd.Variable(torch.tensor(float(f.read())+0.5, dtype=torch.float32), requires_grad=True).to(self.device) #
@@ -325,7 +325,7 @@ class Agent_train():
             #self.alpha = torch.exp(self.log_alpha)
             #self.alpha_1 = torch.clamp(self.alpha, min=0) 
         #print(self.alpha)
-        self.actor.load_weight(path=f"111062892_hw4_data")
+        self.actor.load_weight(path=path)
         #self.critic_1.load_weight(path=f"111062892_hw4_data")
         #self.critic_2.load_weight(path=f"111062892_hw4_data")
 
@@ -395,18 +395,17 @@ class Critic(nn.Module):
 
     def load_weight(self, path):
         self.load_state_dict(torch.load(f"{path}"))
-"""
+
 if __name__ == "__main__":
-    env = L2M2019Env(visualize=False, difficulty=2)
+    env = L2M2019Env(visualize=True, difficulty=2)
     observation = env.reset()
 
 
     episode_num = 50000
 
-    agent = Agent_train()
+    agent = Agent_train(n=False)
     agent.act(observation)
-    agent.save_weight()
-    #agent.load_weight(ep="4399_") # 1149  2949_
+    agent.load_weight(path=f"./models_3/test_model_weight_ep{199}_act") # 1149  2949_
 
     ave_reward = np.zeros(10)
 
@@ -424,15 +423,15 @@ if __name__ == "__main__":
         while not done:
             r_reward = 0
             agent.skip_frame_counter = 2
-            action = agent.act(obs, rand_out=False, eps=eps+4000)
+            action = agent.act(obs, rand_out=False)
 
             # skip 2 frame
             for i in range(agent.skip_frame):
                 
                 next_obs, reward, done, info = env.step(action)
-                if sam:
-                    agent.show_sample()
-                    sam = False
+                #if sam:
+                #    agent.show_sample()
+                #    sam = False
 
                 #env.render()
 
@@ -441,16 +440,16 @@ if __name__ == "__main__":
                 
                 if done:
                     break
-            if done:
-                agent.store_memory(obs, action, r_reward, next_obs, 1)
-            else:
-                agent.store_memory(obs, action, r_reward, next_obs, 0)
+            #if done:
+            #    agent.store_memory(obs, action, r_reward, next_obs, 1)
+            #else:
+            #    agent.store_memory(obs, action, r_reward, next_obs, 0)
             
 
-            frame_counter += 1
-            if frame_counter >= 1:
-                agent.update_network()
-                frame_counter = 0
+            #frame_counter += 1
+            #if frame_counter >= 1:
+            #    agent.update_network()
+            #    frame_counter = 0
             
             #time_counter += 1
             #if time_counter > 2000 and rewards < 1500:
@@ -458,11 +457,10 @@ if __name__ == "__main__":
 
             obs = next_obs
 
-        if (eps+1) % 50 == 0:
-            agent.save_weight(ep=eps)
+        #if (eps+1) % 50 == 0:
+        #    agent.save_weight(ep=eps)
         ave_reward[1:] = ave_reward[:-1]
         ave_reward[0] = total_reward
         print(f"Episode: {eps}, rewards: {total_reward}, ave reward: {np.mean(ave_reward)}")
 
     agent.save_weight()
-    """
